@@ -50,4 +50,16 @@ describe('responses', () => {
         .then(res => res.should.equal('My favorite machine at the gym is the vending machine.'));
     });
   });
+
+  describe('what', () => {
+    it('should return what image at index 0', () => {
+      return responses.what({}, {}, '0')
+        .then(res => res.should.equal('http://i.imgur.com/FusWJ4Q.gif'));
+    });
+
+    it('should return a random what image', () => {
+      return responses.drama({}, {}, '1000')
+        .then(res => res.should.equal('http://i.imgur.com/FusWJ4Q.gif'));
+    });
+  });
 });
