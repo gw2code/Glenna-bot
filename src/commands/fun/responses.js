@@ -1,6 +1,6 @@
 import Promise from 'bluebird';
 
-import { drama as _drama, emoji as _emoji, quotes } from '../../data';
+import { drama as _drama, emoji as _emoji, quotes, what as _what } from '../../data';
 
 
 function drama(client, evt, suffix) {
@@ -21,15 +21,25 @@ function quote(client, evt, suffix) {
   return Promise.resolve(quotes[rand]);
 }
 
+function what(client, evt, suffix) {
+  const rand = Math.floor(Math.random() * _what.length);
+  if (suffix && suffix >= 0 && suffix <= (_what.length - 1)) return Promise.resolve(_what[suffix]);
+  return Promise.resolve(_what[rand]);
+}
+
 export default {
   drama,
   emoji,
   emojis: emoji,
-  quote
+  quote,
+  what,
+  wut: what,
+  wtf: what
 };
 
 export const help = {
   drama: {parameters: 'number'},
   emoji: {parameters: 'number'},
-  quote: {parameters: 'number'}
+  quote: {parameters: 'number'},
+  what: {parameters: 'number'}
 };
