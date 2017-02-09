@@ -16,7 +16,8 @@ export default {
   kappahd: () => Promise.resolve({upload: path.join(__dirname, '../../images/Kappahd.png')}),
   skeltal: () => Promise.resolve('http://i.imgur.com/ZX79Q4S.gif'),
   starwars4: () => Promise.resolve('http://i.imgur.com/l9VKWWF.gif'),
-  starwars5: () => Promise.resolve('http://i.imgur.com/eCpwo6J.gif')
+  starwars5: () => Promise.resolve('http://i.imgur.com/eCpwo6J.gif'),
+  glenna: () => Promise.resolve('I\'m not your puppy!')
 };
 
 export const help = {
