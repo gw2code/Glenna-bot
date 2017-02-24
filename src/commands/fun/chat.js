@@ -4,6 +4,7 @@ import ent from 'entities';
 
 
 const clever = new Cleverbot();
+clever.configure({botapi: '684112d43020ba86ddd72f8ee68431e9'});
 
 function chat(client, evt, suffix, lang) {
   if (!suffix) suffix = 'Hello.';
