@@ -21,26 +21,29 @@ function fact(client, evt, suffix, lang) {
       apiUrl = 'https://dog-api.kinduff.com/api/facts';
       break;
     default:
-      return Promise.resolve('Sorry, I don\'t know any facts about ' + suffix + ' :neutral_face');
+      return Promise.resolve('Sorry, I don\'t know any facts about **' + suffix + '** :neutral_face:');
   }
 
-  const options = {
-    method: 'GET',
-    url: apiUrl,
-    json: true,
-    qs: {
-      format: 'json'
-    }
-  };
+  if (apiUrl !== '') {
+    const options = {
+      method: 'GET',
+      url: apiUrl,
+      json: true,
+      qs: {
+        format: 'json'
+      }
+    };
 
-  return request(options)
-    .then(response => {
-      return Promise.resolve(response.body.facts);
-    });
+    return request(options)
+      .then(response => {
+        return Promise.resolve(response.body.facts);
+      });
+  }
 }
 
 export default {
-  fact
+  fact,
+  facts: fact
 };
 
 export const help = {
