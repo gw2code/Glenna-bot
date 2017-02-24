@@ -7,21 +7,21 @@ function fact(client, evt, suffix, lang) {
 
   let apiUrl = '';
 
-  switch(suffix) {
+  switch (suffix) {
     case 'cat':
-         'cate':
-         'cats':
-        apiUrl = 'http://catfacts-api.appspot.com/api/facts';
-        break;
+    case 'cate':
+    case 'cats':
+      apiUrl = 'http://catfacts-api.appspot.com/api/facts';
+      break;
     case 'dog':
-         'dogo':
-         'doge':
-         'pug':
-         'dogs':
-        apiUrl = 'https://dog-api.kinduff.com/api/facts';
-        break;
+    case 'dogo':
+    case 'doge':
+    case 'pug':
+    case 'dogs':
+      apiUrl = 'https://dog-api.kinduff.com/api/facts';
+      break;
     default:
-        return Promise.resolve('Sorry, I don\'t know any facts about '+suffix+' :neutral_face');
+      return Promise.resolve('Sorry, I don\'t know any facts about ' + suffix + ' :neutral_face');
   }
 
   const options = {
@@ -40,8 +40,7 @@ function fact(client, evt, suffix, lang) {
 }
 
 export default {
-  fact,
-  catfact: fact
+  fact
 };
 
 export const help = {
