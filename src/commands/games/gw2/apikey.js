@@ -65,9 +65,9 @@ export function apikeyShow(evt) {
     });
   };
 
-  return MongoClient.connect(mongoUri, function(err, db) {
+  MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
-    return getKey(db, function(msg) {
+    getKey(db, function(msg) {
       db.close();
       evt.message.channel.sendMessage(msg);
       return Promise.resolve();

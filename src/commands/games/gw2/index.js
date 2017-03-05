@@ -2,6 +2,7 @@ import { subCommands as helpText } from '../../help';
 import { fractals, pvp, pve, wvw } from './daily';
 import { agonyResistance } from './guide';
 import { apikeyAdd, apikeyShow, apikeyDelete } from './apikey';
+import { raidBossStatus } from './raid';
 
 export default {
   daily: (client, evt, suffix, lang) => {
@@ -29,6 +30,13 @@ export default {
     if (command === 'add') return apikeyAdd(client, evt, key);
     if (command === 'show') return apikeyShow(evt);
     if (command === 'delete') return apikeyDelete(evt);
+
+    return helpText(client, evt, 'gw2', lang);
+  },
+  raid: (client, evt, suffix, lang) => {
+    const command = suffix.toLowerCase().split(' ')[0];
+
+    if (command === 'boss') return raidBossStatus(evt);
 
     return helpText(client, evt, 'gw2', lang);
   }
