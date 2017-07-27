@@ -7,3 +7,4 @@ export const lol_items = require('./lol_items.json');
 export memes from './memes';
 export quotes from './quotes';
 export what from './what';
+export rob from './rob';
