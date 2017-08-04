@@ -17,7 +17,8 @@ export default {
   skeltal: () => Promise.resolve('http://i.imgur.com/ZX79Q4S.gif'),
   starwars4: () => Promise.resolve('http://i.imgur.com/l9VKWWF.gif'),
   starwars5: () => Promise.resolve('http://i.imgur.com/eCpwo6J.gif'),
-  glenna: () => Promise.resolve('I\'m not your puppy!')
+  glenna: () => Promise.resolve('I\'m not your puppy!'),
+  daft: () => Promise.resolve('This is daft')
 };
 
 export const help = {
