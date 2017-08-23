@@ -8,5 +8,5 @@ export default [
   'Not gonna point finger on anyone. **Rob**. But I have a suspect... **Rob**.',
   'Blame **Rob**',
   'This time it\'s clearly **Rob\'s** fault',
-  'We all know this is **Rob\'s fault**.'
+  'We all know this is **Rob\'s** fault.'
 ];

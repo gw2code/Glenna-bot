@@ -5,7 +5,9 @@ import { rob } from '../../data';
 
 function blame(client, evt, suffix, lang) {
   const rand = Math.floor(Math.random() * rob.length);
-  return Promise.resolve(`${rob[rand]}`);
+  let robQuote = `${rob[rand]}`;
+  let selfQuote = robQuote.replace('Rob', evt.message.author.username);
+  return Promise.resolve(selfQuote);
 }
 
 export default {
