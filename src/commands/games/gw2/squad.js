@@ -346,7 +346,8 @@ export function raidJoin(client, evt) {
             db.close();
             postRaidToDiscord(client, evt);
             if (msg !== '') {
-              evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
+              // evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
+              client.Users.get(evt.message.author.id).openDM().then(dm => dm.sendMessage(msg));
             }
             evt.message.addReaction('\uD83D\uDC4C'); // add :ok_hand: reaction as comfirmation
             return Promise.resolve();
