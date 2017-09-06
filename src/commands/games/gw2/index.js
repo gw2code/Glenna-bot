@@ -3,6 +3,7 @@ import { fractals, pvp, pve, wvw } from './daily';
 import { agonyResistance } from './guide';
 import { apikeyAdd, apikeyShow, apikeyDelete } from './apikey';
 import { raidBossStatus } from './raid';
+import { raidCreate, raidJoin, raidLeave, raidDelete, raidShow } from './squad';
 
 export default {
   daily: (client, evt, suffix, lang) => {
@@ -37,6 +38,11 @@ export default {
     const command = suffix.toLowerCase().split(' ')[0];
 
     if (command === 'boss') return raidBossStatus(evt);
+    if (command === 'create') return raidCreate(client, evt, suffix);
+    if (command === 'join') return raidJoin(client, evt);
+    if (command === 'leave') return raidLeave(client, evt);
+    if (command === 'delete') return raidDelete(client, evt);
+    if (command === 'show' || command === 'list') return raidShow(client, evt);
 
     return helpText(client, evt, 'gw2', lang);
   }

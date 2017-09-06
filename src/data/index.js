@@ -8,3 +8,4 @@ export memes from './memes';
 export quotes from './quotes';
 export what from './what';
 export rob from './rob';
+export gw2_bosses from './gw2/bosses';
