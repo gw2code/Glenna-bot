@@ -302,12 +302,9 @@ export function raidDelete(client, evt) {
 // ====================================================
 
 export function raidJoin(client, evt) {
-  // send "typing"
-  evt.message.channel.sendTyping();
-
   let addRaiderToSquad = function(db, group, callback) {
     // decide where to put raider
-    let msg = 'You have been added to raid squad!';
+    let msg = '';
     let isBackup = false;
 
     if (raid.squad.length >= 10) {
@@ -348,7 +345,10 @@ export function raidJoin(client, evt) {
           addRaiderToSquad(db, group, function(msg) {
             db.close();
             postRaidToDiscord(client, evt);
-            evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
+            if (msg !== '') {
+              evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
+            }
+            evt.message.addReaction('\uD83D\uDC4C'); // add :ok_hand: reaction as comfirmation
             return Promise.resolve();
           });
         }
