@@ -16,7 +16,7 @@ let createEmbed = function() {
   // create embed object
   let embed = {
     title: 'Raid squad (beta)',
-    description: 'If you want to participate and reserve place in squad, type `!raid join` in this channel. If squad is already full, you will be added to backup queue and I will send you direct message on Discord when someone leaves.\n\nRaid starts at [19:30 GMT+1](http://everytimezone.com/#2017-9-6,390,cn3)',
+    description: 'If you want to participate and reserve place in squad, type `!raid join` in this channel. If squad is already full, you will be added to backup queue and I will send you direct message on Discord when someone leaves.',
     color: 13132124,
     thumbnail: {
       url: 'https://wiki.guildwars2.com/images/1/1f/Spirit_Vale_%28achievements%29.png'
