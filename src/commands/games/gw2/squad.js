@@ -196,7 +196,7 @@ let postRaidToDiscord = function(client, evt) {
         let embed = createEmbed();
         sendMessage(embed);
       } else {
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
       }
     });
   });
@@ -290,7 +290,7 @@ export function raidDelete(client, evt) {
           return Promise.resolve();
         });
       } else {
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
         return Promise.resolve();
       }
     });
@@ -355,7 +355,7 @@ export function raidJoin(client, evt) {
         }
       } else {
         db.close();
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
       }
     });
   });
@@ -443,7 +443,7 @@ export function raidLeave(client, evt) {
         });
       } else {
         db.close();
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
       }
     });
   });
@@ -470,7 +470,7 @@ export function raidShow(client, evt) {
           return Promise.resolve();
         });
       } else {
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
         return Promise.resolve();
       }
     });
