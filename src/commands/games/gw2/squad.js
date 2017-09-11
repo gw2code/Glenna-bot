@@ -5,6 +5,7 @@ import { gw2_bosses } from '../../../data';
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 const mongoUri = nconf.get('MONGODB_URI');
+const guildId = nconf.get('GUILD_ID');
 
 let raid = {};
 
@@ -210,7 +211,7 @@ export function raidCreate(client, evt, suffix) {
   const keywords = suffix.toLowerCase().split(' ');
   keywords.shift(); // remove first array item, because its command, not keyword
 
-  const guild = client.Guilds.find(g => g.id === '270525016704155658'); // use guild discord ID
+  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
   let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
   let bosses = [];
@@ -275,6 +276,19 @@ export function raidDelete(client, evt) {
   // send "typing"
   evt.message.channel.sendTyping();
 
+  // function that checks permissions to delete raid (commander or council)
+  let canDeleteRaid = function() {
+    // check commander
+    let isCommander = raid.commander.id === evt.message.author.id;
+
+    // check council
+    const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+    let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
+    let isCouncil = member.roles.find(r => r.name === 'Lunar Ascended');
+
+    return (isCommander || isCouncil);
+  };
+
   let deleteRaid = function(db, callback) {
     db.collection('raids').deleteMany({},
       function(err, result) {
@@ -283,15 +297,22 @@ export function raidDelete(client, evt) {
       });
   };
 
+
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
     getRaid(db, function(raidExists) {
+      // check if raid exists
       if (raidExists) {
-        deleteRaid(db, function() {
-          db.close();
-          evt.message.channel.sendMessage('Raid was successfully removed!');
-          return Promise.resolve();
-        });
+        // check permissions to delete raid
+        if (canDeleteRaid()) {
+          deleteRaid(db, function() {
+            db.close();
+            evt.message.channel.sendMessage('Raid was successfully removed!');
+            return Promise.resolve();
+          });
+        } else {
+          evt.message.channel.sendMessage('Only raid commander or council member can delete existing raid!');
+        }
       } else {
         evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
         return Promise.resolve();
@@ -305,7 +326,7 @@ export function raidDelete(client, evt) {
 // ====================================================
 
 export function raidJoin(client, evt) {
-  const guild = client.Guilds.find(g => g.id === '270525016704155658'); // use guild discord ID
+  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
   let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
   let addRaiderToSquad = function(db, group, callback) {
