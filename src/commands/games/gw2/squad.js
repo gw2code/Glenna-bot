@@ -5,6 +5,7 @@ import { gw2_bosses } from '../../../data';
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 const mongoUri = nconf.get('MONGODB_URI');
+const guildId = nconf.get('GUILD_ID');
 
 let raid = {};
 
@@ -207,8 +208,11 @@ let postRaidToDiscord = function(client, evt) {
 // ====================================================
 
 export function raidCreate(client, evt, suffix) {
-  let keywords = suffix.toLowerCase().split(' ');
+  const keywords = suffix.toLowerCase().split(' ');
   keywords.shift(); // remove first array item, because its command, not keyword
+
+  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+  let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
   let bosses = [];
 
@@ -227,14 +231,14 @@ export function raidCreate(client, evt, suffix) {
   let insertRaid = function(db, callback) {
     db.collection('raids').insertOne({
       commander: {
-        id: evt.message.author.id,
-        name: evt.message.author.username
+        id: member.id,
+        name: member.nick
       },
       discordPost: null,
       squad: [
         {
-          id: evt.message.author.id,
-          name: evt.message.author.username,
+          id: member.id,
+          name: member.nick,
           backup: false
         }
       ],
@@ -272,6 +276,19 @@ export function raidDelete(client, evt) {
   // send "typing"
   evt.message.channel.sendTyping();
 
+  // function that checks permissions to delete raid (commander or council)
+  let canDeleteRaid = function() {
+    // check commander
+    let isCommander = raid.commander.id === evt.message.author.id;
+
+    // check council
+    const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+    let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
+    let isCouncil = member.roles.find(r => r.name === 'Lunar Ascended');
+
+    return (isCommander || isCouncil);
+  };
+
   let deleteRaid = function(db, callback) {
     db.collection('raids').deleteMany({},
       function(err, result) {
@@ -280,15 +297,22 @@ export function raidDelete(client, evt) {
       });
   };
 
+
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
     getRaid(db, function(raidExists) {
+      // check if raid exists
       if (raidExists) {
-        deleteRaid(db, function() {
-          db.close();
-          evt.message.channel.sendMessage('Raid was successfully removed!');
-          return Promise.resolve();
-        });
+        // check permissions to delete raid
+        if (canDeleteRaid()) {
+          deleteRaid(db, function() {
+            db.close();
+            evt.message.channel.sendMessage('Raid was successfully removed!');
+            return Promise.resolve();
+          });
+        } else {
+          evt.message.channel.sendMessage('Only raid commander or council member can delete existing raid!');
+        }
       } else {
         evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
         return Promise.resolve();
@@ -302,6 +326,9 @@ export function raidDelete(client, evt) {
 // ====================================================
 
 export function raidJoin(client, evt) {
+  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+  let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
+
   let addRaiderToSquad = function(db, group, callback) {
     // decide where to put raider
     let msg = '';
@@ -317,8 +344,8 @@ export function raidJoin(client, evt) {
       {
         $addToSet: {
           squad: {
-            id: evt.message.author.id,
-            name: evt.message.author.username,
+            id: member.id,
+            name: member.nick,
             backup: isBackup
           }
         }
@@ -337,7 +364,7 @@ export function raidJoin(client, evt) {
       if (raidExists) {
         let group = 'squad';
 
-        let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === evt.message.author.id);
+        let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === member.id);
 
         if (raiderInSquad) {
           evt.message.channel.sendMessage(evt.message.author.mention + ' You are already in squad... :expressionless:');
@@ -347,7 +374,7 @@ export function raidJoin(client, evt) {
             postRaidToDiscord(client, evt);
             if (msg !== '') {
               // evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
-              client.Users.get(evt.message.author.id).openDM().then(dm => dm.sendMessage(msg));
+              client.Users.get(member.id).openDM().then(dm => dm.sendMessage(msg));
             }
             evt.message.addReaction('\uD83D\uDC4C'); // add :ok_hand: reaction as comfirmation
             return Promise.resolve();
