@@ -207,8 +207,11 @@ let postRaidToDiscord = function(client, evt) {
 // ====================================================
 
 export function raidCreate(client, evt, suffix) {
-  let keywords = suffix.toLowerCase().split(' ');
+  const keywords = suffix.toLowerCase().split(' ');
   keywords.shift(); // remove first array item, because its command, not keyword
+
+  const guild = client.Guilds.find(g => g.id === '270525016704155658'); // use guild discord ID
+  let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
   let bosses = [];
 
@@ -227,14 +230,14 @@ export function raidCreate(client, evt, suffix) {
   let insertRaid = function(db, callback) {
     db.collection('raids').insertOne({
       commander: {
-        id: evt.message.author.id,
-        name: evt.message.author.username
+        id: member.id,
+        name: member.nick
       },
       discordPost: null,
       squad: [
         {
-          id: evt.message.author.id,
-          name: evt.message.author.username,
+          id: member.id,
+          name: member.nick,
           backup: false
         }
       ],
@@ -302,6 +305,9 @@ export function raidDelete(client, evt) {
 // ====================================================
 
 export function raidJoin(client, evt) {
+  const guild = client.Guilds.find(g => g.id === '270525016704155658'); // use guild discord ID
+  let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
+
   let addRaiderToSquad = function(db, group, callback) {
     // decide where to put raider
     let msg = '';
@@ -317,8 +323,8 @@ export function raidJoin(client, evt) {
       {
         $addToSet: {
           squad: {
-            id: evt.message.author.id,
-            name: evt.message.author.username,
+            id: member.id,
+            name: member.nick,
             backup: isBackup
           }
         }
@@ -337,7 +343,7 @@ export function raidJoin(client, evt) {
       if (raidExists) {
         let group = 'squad';
 
-        let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === evt.message.author.id);
+        let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === member.id);
 
         if (raiderInSquad) {
           evt.message.channel.sendMessage(evt.message.author.mention + ' You are already in squad... :expressionless:');
@@ -347,7 +353,7 @@ export function raidJoin(client, evt) {
             postRaidToDiscord(client, evt);
             if (msg !== '') {
               // evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
-              client.Users.get(evt.message.author.id).openDM().then(dm => dm.sendMessage(msg));
+              client.Users.get(member.id).openDM().then(dm => dm.sendMessage(msg));
             }
             evt.message.addReaction('\uD83D\uDC4C'); // add :ok_hand: reaction as comfirmation
             return Promise.resolve();
