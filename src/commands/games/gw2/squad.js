@@ -232,13 +232,13 @@ export function raidCreate(client, evt, suffix) {
     db.collection('raids').insertOne({
       commander: {
         id: member.id,
-        name: member.nick
+        name: member.nick || member.username
       },
       discordPost: null,
       squad: [
         {
           id: member.id,
-          name: member.nick,
+          name: member.nick || member.username,
           backup: false
         }
       ],
@@ -345,7 +345,7 @@ export function raidJoin(client, evt) {
         $addToSet: {
           squad: {
             id: member.id,
-            name: member.nick,
+            name: member.nick || member.username,
             backup: isBackup
           }
         }
