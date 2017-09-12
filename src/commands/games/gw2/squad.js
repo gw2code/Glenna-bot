@@ -207,10 +207,7 @@ let postRaidToDiscord = function(client, evt) {
 //   Create raid squad and insert it into database
 // ====================================================
 
-export function raidCreate(client, evt, suffix) {
-  const keywords = suffix.toLowerCase().split(' ');
-  keywords.shift(); // remove first array item, because its command, not keyword
-
+export function raidCreate(client, evt, keywords) {
   const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
   let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
