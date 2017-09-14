@@ -35,14 +35,20 @@ export default {
     return helpText(client, evt, 'gw2', lang);
   },
   raid: (client, evt, suffix, lang) => {
-    const command = suffix.toLowerCase().split(' ')[0];
+    const keywords = suffix.toLowerCase().split(' ');
+    const command = keywords[0];
+    keywords.shift(); // remove first array item, because it's command, not keyword
 
     if (command === 'boss') return raidBossStatus(evt);
-    if (command === 'create') return raidCreate(client, evt, suffix);
-    if (command === 'join') return raidJoin(client, evt);
+    if (command === 'create') return raidCreate(client, evt, keywords);
+    if (command === 'join') return raidJoin(client, evt, keywords);
+    if (command === 'backup') {
+      keywords.push('backup');
+      return raidJoin(client, evt, keywords);
+    }
     if (command === 'leave') return raidLeave(client, evt);
     if (command === 'delete') return raidDelete(client, evt);
-    if (command === 'show' || command === 'list') return raidShow(client, evt);
+    if (command === ('show' || 'list')) return raidShow(client, evt);
 
     return helpText(client, evt, 'gw2', lang);
   }

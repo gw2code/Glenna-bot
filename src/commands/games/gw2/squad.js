@@ -5,6 +5,7 @@ import { gw2_bosses } from '../../../data';
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 const mongoUri = nconf.get('MONGODB_URI');
+const guildId = nconf.get('GUILD_ID');
 
 let raid = {};
 
@@ -16,11 +17,8 @@ let createEmbed = function() {
   // create embed object
   let embed = {
     title: 'Raid squad (beta)',
-    description: 'If you want to participate and reserve place in squad, type `!raid join` in this channel. If squad is already full, you will be added to backup queue and I will send you direct message on Discord when someone leaves.\n\nRaid starts at [19:30 GMT+1](http://everytimezone.com/#2017-9-6,390,cn3)',
+    description: 'If you want to participate and reserve place in squad, type `!raid join` in this channel. If squad is already full, you will be added to queue and I will send you direct message on Discord when someone leaves.',
     color: 13132124,
-    thumbnail: {
-      url: 'https://wiki.guildwars2.com/images/1/1f/Spirit_Vale_%28achievements%29.png'
-    },
     author: {
       name: raid.commander.name,
       icon_url: 'https://wiki.guildwars2.com/images/5/5a/Commander_tango_icon_200px.png'
@@ -28,15 +26,17 @@ let createEmbed = function() {
     fields: []
   };
 
+  let raidSquadString = '';
+  let raidQueueString = '';
+  let raidBackupString = '';
+
   // add people to squad
   if (raid.squad.length > 0) {
-    let raidSquadString = '';
-    let raidBackupString = '';
     let raidSquadCount = 0;
 
     raid.squad.forEach(function(raider) {
-      if (raider.backup) {
-        raidBackupString += raider.name + '\n';
+      if (raider.queue) {
+        raidQueueString += raider.name + '\n';
       } else {
         raidSquadString += raider.name + '\n';
         raidSquadCount++;
@@ -52,7 +52,22 @@ let createEmbed = function() {
       });
     }
 
-    // backup
+    // queue
+    if (raidQueueString !== '') {
+      embed.fields.push({
+        name: 'In-queue',
+        value: raidQueueString,
+        inline: true
+      });
+    }
+  }
+
+  // add backup people
+  if (raid.backup.length > 0) {
+    raid.backup.forEach(function(raider) {
+      raidBackupString += raider.name + '\n';
+    });
+
     if (raidBackupString !== '') {
       embed.fields.push({
         name: 'Backup',
@@ -83,10 +98,25 @@ let createEmbed = function() {
   }
 
   // list available commands
+  let commands = [
+    '`!raid join` - get yourself place in the squad',
+    '`!raid backup` - sign up as backup',
+    '`!raid leave` - remove yourself from the squad',
+    '`!raid show` - move raid post to the end of channel'
+  ];
+
+  let commandsString = commands.join('\n');
+
   embed.fields.push({
     name: 'Available commands',
-    value: '`!raid join` - get yourself place in the squad\n`!raid leave` - remove yourself from the squad\n`!raid show` - move raid post to the end of channel\n'
+    value: commandsString
   });
+
+  if (raidSquadString === '' || raidQueueString === '' || raidBackupString === '') {
+    embed.thumbnail = {
+      url: 'https://wiki.guildwars2.com/images/1/1f/Spirit_Vale_%28achievements%29.png'
+    };
+  }
 
   return embed;
 };
@@ -196,7 +226,7 @@ let postRaidToDiscord = function(client, evt) {
         let embed = createEmbed();
         sendMessage(embed);
       } else {
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
       }
     });
   });
@@ -206,9 +236,9 @@ let postRaidToDiscord = function(client, evt) {
 //   Create raid squad and insert it into database
 // ====================================================
 
-export function raidCreate(client, evt, suffix) {
-  let keywords = suffix.toLowerCase().split(' ');
-  keywords.shift(); // remove first array item, because its command, not keyword
+export function raidCreate(client, evt, keywords) {
+  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+  let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
   let bosses = [];
 
@@ -227,17 +257,18 @@ export function raidCreate(client, evt, suffix) {
   let insertRaid = function(db, callback) {
     db.collection('raids').insertOne({
       commander: {
-        id: evt.message.author.id,
-        name: evt.message.author.username
+        id: member.id,
+        name: member.nick || member.username
       },
       discordPost: null,
       squad: [
         {
-          id: evt.message.author.id,
-          name: evt.message.author.username,
-          backup: false
+          id: member.id,
+          name: member.nick || member.username,
+          queue: false
         }
       ],
+      backup: [],
       bosses: bosses
     }, function(err, result) {
       assert.equal(err, null);
@@ -272,6 +303,19 @@ export function raidDelete(client, evt) {
   // send "typing"
   evt.message.channel.sendTyping();
 
+  // function that checks permissions to delete raid (commander or council)
+  let canDeleteRaid = function() {
+    // check commander
+    let isCommander = raid.commander.id === evt.message.author.id;
+
+    // check council
+    const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+    let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
+    let isCouncil = member.roles.find(r => r.name === 'Lunar Ascended');
+
+    return (isCommander || isCouncil);
+  };
+
   let deleteRaid = function(db, callback) {
     db.collection('raids').deleteMany({},
       function(err, result) {
@@ -280,17 +324,24 @@ export function raidDelete(client, evt) {
       });
   };
 
+
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
     getRaid(db, function(raidExists) {
+      // check if raid exists
       if (raidExists) {
-        deleteRaid(db, function() {
-          db.close();
-          evt.message.channel.sendMessage('Raid was successfully removed!');
-          return Promise.resolve();
-        });
+        // check permissions to delete raid
+        if (canDeleteRaid()) {
+          deleteRaid(db, function() {
+            db.close();
+            evt.message.channel.sendMessage('Raid was successfully removed!');
+            return Promise.resolve();
+          });
+        } else {
+          evt.message.channel.sendMessage('Only raid commander or council member can delete existing raid!');
+        }
       } else {
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
         return Promise.resolve();
       }
     });
@@ -301,31 +352,49 @@ export function raidDelete(client, evt) {
 //   Join existing raid
 // ====================================================
 
-export function raidJoin(client, evt) {
-  let addRaiderToSquad = function(db, group, callback) {
+export function raidJoin(client, evt, keywords) {
+  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+  let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
+
+  let isBackup = keywords.includes('backup');
+
+  let addRaiderToSquad = function(db, callback) {
     // decide where to put raider
     let msg = '';
-    let isBackup = false;
+    let isQueue = false;
+    let request = {};
 
-    if (raid.squad.length >= 10) {
-      isBackup = true;
-      msg = 'Sorry, raid squad is already full so I signed you up as backup. When there will be free spot in squad I will send you direct message on Discord!';
+    if (isBackup) {
+      request = {
+        $addToSet: {
+          backup: {
+            id: member.id,
+            name: member.nick || member.username,
+            queue: isQueue
+          }
+        }
+      };
+    } else {
+      if (raid.squad.length >= 10) {
+        isQueue = true;
+        msg = 'Sorry, raid squad is already full so I added you into queue. When there will be free spot in squad I will send you direct message on Discord!';
+      }
+      request = {
+        $addToSet: {
+          squad: {
+            id: member.id,
+            name: member.nick || member.username,
+            queue: isQueue
+          }
+        }
+      };
     }
 
     db.collection('raids').updateOne(
       {}, // empty filter means update first (and only) raid  $addToSet
-      {
-        $addToSet: {
-          squad: {
-            id: evt.message.author.id,
-            name: evt.message.author.username,
-            backup: isBackup
-          }
-        }
-      },
+      request,
       {upsert: true}, function(err, result) {
         assert.equal(err, null);
-        console.log('Raider added to the squad');
         callback(msg);
       });
   };
@@ -335,18 +404,18 @@ export function raidJoin(client, evt) {
 
     getRaid(db, function(raidExists) {
       if (raidExists) {
-        let group = 'squad';
+        let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === member.id);
+        let raiderInBackup = raid.backup.find(backupRaider => backupRaider.id === member.id);
 
-        let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === evt.message.author.id);
-
-        if (raiderInSquad) {
+        if (raiderInSquad || raiderInBackup) {
           evt.message.channel.sendMessage(evt.message.author.mention + ' You are already in squad... :expressionless:');
         } else {
-          addRaiderToSquad(db, group, function(msg) {
+          addRaiderToSquad(db, function(msg) {
             db.close();
             postRaidToDiscord(client, evt);
             if (msg !== '') {
-              evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
+              // evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
+              client.Users.get(member.id).openDM().then(dm => dm.sendMessage(msg));
             }
             evt.message.addReaction('\uD83D\uDC4C'); // add :ok_hand: reaction as comfirmation
             return Promise.resolve();
@@ -354,7 +423,7 @@ export function raidJoin(client, evt) {
         }
       } else {
         db.close();
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
       }
     });
   });
@@ -371,26 +440,43 @@ export function raidLeave(client, evt) {
 
   let removeRaiderFromSquad = function(db, callback) {
     // function to remove raider in dtb
-    let removeRaider = function() {
+    let removeRaider = function(group) {
       msg = 'You have been unlisted from raid. Pfff... filthy casual :rolling_eyes:';
 
-      db.collection('raids').updateOne(
+      if (group === 'squad') {
+        db.collection('raids').updateOne(
         {}, // empty filter means update first (and only) raid
-        {
-          $pull: {
-            squad: {
-              id: evt.message.author.id
+          {
+            $pull: {
+              squad: {
+                id: evt.message.author.id
+              }
             }
-          }
-        },
+          },
         {multi: true}, function(err, result) {
           assert.equal(err, null);
           console.log('Raider removed from the squad');
           callback(msg);
         });
+      } else {
+        db.collection('raids').updateOne(
+        {}, // empty filter means update first (and only) raid
+          {
+            $pull: {
+              backup: {
+                id: evt.message.author.id
+              }
+            }
+          },
+        {multi: true}, function(err, result) {
+          assert.equal(err, null);
+          console.log('Raider removed from the squad');
+          callback(msg);
+        });
+      }
     };
 
-    // promote raider from backup to regular squad
+    // promote raider from queue to regular squad
     let promoteRaider = function(db, raider, call) {
       db.collection('raids').updateOne(
         {
@@ -398,31 +484,34 @@ export function raidLeave(client, evt) {
         },
         {
           $set: {
-            'squad.$.backup': false
+            'squad.$.queue': false
           }
         },
         {multi: true}, function(err, result) {
           assert.equal(err, null);
-          client.Users.get(raider.id).openDM().then(dm => dm.sendMessage('There was free spot in raid squad so you are no longer backup! Congratz!'));
+          client.Users.get(raider.id).openDM().then(dm => dm.sendMessage('There was free spot in raid squad so you are no longer in queue! Congratz!'));
           call();
         });
     };
 
     // check if raider is in squad
-    let raider = raid.squad.find(squadRaider => squadRaider.id === evt.message.author.id);
+    let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === evt.message.author.id);
+    let raiderInBackup = raid.backup.find(backupRaider => backupRaider.id === evt.message.author.id);
 
-    if (raider) {
-      // make room for possible backup
-      let promotedRaider = raid.squad.find(squadRaider => squadRaider.backup === true);
+    if (raiderInSquad) {
+      // make room for possible raider in queue
+      let promotedRaider = raid.squad.find(squadRaider => squadRaider.queue === true);
 
-      if (!raider.backup && promotedRaider) {
+      if (!raiderInSquad.queue && promotedRaider) {
         promoteRaider(db, promotedRaider, function() {
           removeRaider();
         });
       } else {
-        // just remove raider from backup squad
-        removeRaider();
+        // just remove raider from queue squad
+        removeRaider('squad');
       }
+    } else if (raiderInBackup) {
+      removeRaider('backup');
     } else {
       msg = 'You are not even in squad.... how can I remove you? :laughing:';
       callback(msg);
@@ -442,7 +531,7 @@ export function raidLeave(client, evt) {
         });
       } else {
         db.close();
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
       }
     });
   });
@@ -469,7 +558,7 @@ export function raidShow(client, evt) {
           return Promise.resolve();
         });
       } else {
-        evt.message.channel.sendMessage('There is no active raid right now. Use `!raid create` to make a squad!');
+        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
         return Promise.resolve();
       }
     });
