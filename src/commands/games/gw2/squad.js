@@ -100,7 +100,7 @@ let createEmbed = function() {
   // list available commands
   let commands = [
     '`!raid join` - get yourself place in the squad',
-    '`!raid join backup` - sign up as backup',
+    '`!raid backup` - sign up as backup',
     '`!raid leave` - remove yourself from the squad',
     '`!raid show` - move raid post to the end of channel'
   ];
