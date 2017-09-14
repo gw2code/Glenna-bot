@@ -98,12 +98,21 @@ let createEmbed = function() {
   }
 
   // list available commands
+  let commands = [
+    '`!raid join` - get yourself place in the squad',
+    '`!raid join backup` - sign up as backup',
+    '`!raid leave` - remove yourself from the squad',
+    '`!raid show` - move raid post to the end of channel'
+  ];
+
+  let commandsString = commands.join('\n');
+
   embed.fields.push({
     name: 'Available commands',
-    value: '`!raid join` - get yourself place in the squad\n`!raid leave` - remove yourself from the squad\n`!raid show` - move raid post to the end of channel\n'
+    value: commandsString
   });
 
-  if (raidSquadString || raidQueueString || raidBackupString === '') {
+  if (raidSquadString === '' || raidQueueString === '' || raidBackupString === '') {
     embed.thumbnail = {
       url: 'https://wiki.guildwars2.com/images/1/1f/Spirit_Vale_%28achievements%29.png'
     };
