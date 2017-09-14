@@ -42,9 +42,13 @@ export default {
     if (command === 'boss') return raidBossStatus(evt);
     if (command === 'create') return raidCreate(client, evt, keywords);
     if (command === 'join') return raidJoin(client, evt, keywords);
+    if (command === 'backup') {
+      keywords.push('backup');
+      return raidJoin(client, evt, keywords);
+    }
     if (command === 'leave') return raidLeave(client, evt);
     if (command === 'delete') return raidDelete(client, evt);
-    if (command === 'show' || 'list') return raidShow(client, evt);
+    if (command === ('show' || 'list')) return raidShow(client, evt);
 
     return helpText(client, evt, 'gw2', lang);
   }
