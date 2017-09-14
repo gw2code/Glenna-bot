@@ -161,13 +161,17 @@ let removeRaidPost = function(client, db, callback) {
       });
   };
 
-  MongoClient.connect(mongoUri, function(err, db) {
-    assert.equal(null, err);
-    removeRaidPostFromDtb(db, function() {
-      db.close();
-      return Promise.resolve();
+  if (discordPost) {
+    MongoClient.connect(mongoUri, function(err, db) {
+      assert.equal(null, err);
+      removeRaidPostFromDtb(db, function() {
+        db.close();
+        return Promise.resolve();
+      });
     });
-  });
+  } else {
+    callback();
+  }
 };
 
 // ====================================================
@@ -178,7 +182,11 @@ let postRaidToDiscord = function(client, evt) {
   // send message
   let sendMessage = function(embed) {
     let discordPost = raid.discordPost;
-    if (discordPost) {
+
+    if (evt.message.isPrivate) {
+      // just send new msg to private channel, keep existing one in public channel
+      evt.message.channel.sendMessage('', false, embed);
+    } else if (discordPost) {
       // edit existing message
       client.Messages.editMessage('', discordPost.id, discordPost.channel, embed);
     } else {
@@ -550,13 +558,20 @@ export function raidShow(client, evt) {
 
     getRaid(db, function(raidExists) {
       if (raidExists) {
-        // remove previous post
-        removeRaidPost(client, db, function() {
+        if (evt.message.isPrivate) {
           db.close();
           // make new post
           postRaidToDiscord(client, evt);
           return Promise.resolve();
-        });
+        } else {
+          // remove previous post
+          removeRaidPost(client, db, function() {
+            db.close();
+            // make new post
+            postRaidToDiscord(client, evt);
+            return Promise.resolve();
+          });
+        }
       } else {
         evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
         return Promise.resolve();
