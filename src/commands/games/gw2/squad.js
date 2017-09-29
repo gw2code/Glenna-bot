@@ -295,7 +295,10 @@ export function raidCreate(client, evt, keywords) {
           db.close();
           // post message to discord
           postRaidToDiscord(client, evt);
-          // evt.message.channel.sendMessage('@Raiders you can sign up for raid!');
+
+          const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+          let raiders = guild.roles.find(r => r.name === 'Raiders'); // get raiders role
+          evt.message.channel.sendMessage(raiders.mention + ' you can sign up for raid!');
           return Promise.resolve();
         });
       }
