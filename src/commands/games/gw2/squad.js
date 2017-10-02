@@ -22,9 +22,9 @@ const validations = {
 let createEmbed = function() {
   // create embed object
   let embed = {
-    title: 'Raid squad (beta)',
-    description: 'If you want to participate and reserve place in squad, type `!raid join` in this channel. If squad is already full, you will be added to queue and I will send you direct message on Discord when someone leaves.',
-    color: 13132124,
+    title: raid.title,
+    description: raid.description,
+    color: raid.color,
     author: {
       name: raid.commander.name,
       icon_url: 'https://wiki.guildwars2.com/images/5/5a/Commander_tango_icon_200px.png'
@@ -103,20 +103,22 @@ let createEmbed = function() {
     });
   }
 
-  // list available commands
-  let commands = [
-    '`!raid join` - get yourself place in the squad',
-    '`!raid backup` - sign up as backup',
-    '`!raid leave` - remove yourself from the squad',
-    '`!raid show` - move raid post to the end of channel'
-  ];
+  if (raid.active) {
+    // list available commands
+    let commands = [
+      '`!raid join` - get yourself place in the squad',
+      '`!raid backup` - sign up as backup',
+      '`!raid leave` - remove yourself from the squad',
+      '`!raid show` - move raid post to the end of channel'
+    ];
 
-  let commandsString = commands.join('\n');
+    let commandsString = commands.join('\n');
 
-  embed.fields.push({
-    name: 'Available commands',
-    value: commandsString
-  });
+    embed.fields.push({
+      name: 'Available commands',
+      value: commandsString
+    });
+  }
 
   if (raidSquadString === '' || raidQueueString === '' || raidBackupString === '') {
     embed.thumbnail = {
@@ -184,7 +186,7 @@ let removeRaidPost = function(client, db, callback) {
 //   Post raid message to Discord server channel
 // ====================================================
 
-let postRaidToDiscord = function(client, evt) {
+let postRaidToDiscord = function(client, evt, callback) {
   // send message
   let sendMessage = function(embed) {
     let discordPost = raid.discordPost;
@@ -194,7 +196,7 @@ let postRaidToDiscord = function(client, evt) {
       evt.message.channel.sendMessage('', false, embed);
     } else if (discordPost) {
       // edit existing message
-      client.Messages.editMessage('', discordPost.id, discordPost.channel, embed);
+      client.Messages.editMessage('', discordPost.id, discordPost.channel, embed).then(callback());
     } else {
       // post new message and add its ID to raid record in database
       let raidPost = evt.message.channel.sendMessage('', false, embed);
@@ -283,7 +285,11 @@ export function raidCreate(client, evt, keywords) {
         }
       ],
       backup: [],
-      bosses: bosses
+      bosses: bosses,
+      title: 'Raid squad (beta)',
+      color: 13132124,
+      active: true,
+      description: 'If you want to participate and reserve place in squad, type `!raid join` in this channel. If squad is already full, you will be added to queue and I will send you direct message on Discord when someone leaves.'
     }, function(err, result) {
       assert.equal(err, null);
       callback();
@@ -332,14 +338,34 @@ export function raidDelete(client, evt) {
     return (isCommander || isCouncil);
   };
 
+  let updateOldPost = function(db, callback) {
+    db.collection('raids').updateOne(
+    {}, // empty filter means update first (and only) raid
+      {
+        $set: {
+          title: 'Raid squad - CLOSED',
+          color: 4541010,
+          active: false,
+          description: 'This raid squad is already closed. Please wait until commander makes new one. I will then use @Raiders mention in #raids channel to notify all raiders :wink:'
+        }
+      },
+    {multi: true}, function(err, result) {
+      assert.equal(err, null);
+      postRaidToDiscord(client, evt, function() {
+        callback();
+      });
+    });
+  };
+
   let deleteRaid = function(db, callback) {
-    db.collection('raids').deleteMany({},
+    updateOldPost(db, function() {
+      db.collection('raids').deleteMany({},
       function(err, result) {
         assert.equal(err, null);
         callback();
       });
+    });
   };
-
 
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
