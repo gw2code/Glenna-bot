@@ -1,6 +1,6 @@
 import { subCommands as helpText } from '../../help';
 import { fractals, pvp, pve, wvw } from './daily';
-import { agonyResistance, gear } from './guide';
+import { agonyResistance, gear, breakbar } from './guide';
 import { apikeyAdd, apikeyShow, apikeyDelete } from './apikey';
 import { raidBossStatus } from './raid';
 import { raidCreate, raidJoin, raidLeave, raidDelete, raidShow } from './squad';
@@ -21,6 +21,8 @@ export default {
 
     if (command === 'agony' || command === 'ar') return agonyResistance();
     if (command === 'gear' || command === 'equip') return gear();
+    if (command === 'breakbar' || command === 'cc') return breakbar();
+
 
     return helpText(client, evt, 'gw2', lang);
   },
