@@ -1,6 +1,6 @@
 import { subCommands as helpText } from '../../help';
 import { fractals, pvp, pve, wvw } from './daily';
-import { agonyResistance } from './guide';
+import { agonyResistance, gear } from './guide';
 import { apikeyAdd, apikeyShow, apikeyDelete } from './apikey';
 import { raidBossStatus } from './raid';
 import { raidCreate, raidJoin, raidLeave, raidDelete, raidShow } from './squad';
@@ -19,8 +19,8 @@ export default {
   guide: (client, evt, suffix, lang) => {
     const command = suffix.toLowerCase().split(' ')[0];
 
-    if (command === 'agony') return agonyResistance();
-    if (command === 'ar') return agonyResistance();
+    if (command === 'agony' || command === 'ar') return agonyResistance();
+    if (command === 'gear' || command === 'equip') return gear();
 
     return helpText(client, evt, 'gw2', lang);
   },
@@ -48,7 +48,7 @@ export default {
     }
     if (command === 'leave') return raidLeave(client, evt);
     if (command === 'delete') return raidDelete(client, evt);
-    if (command === ('show' || 'list')) return raidShow(client, evt);
+    if (command === 'show' || command === 'list') return raidShow(client, evt);
 
     return helpText(client, evt, 'gw2', lang);
   }
