@@ -9,6 +9,12 @@ const guildId = nconf.get('GUILD_ID');
 
 let raid = {};
 
+// object with validation messages
+const validations = {
+  noRaid: 'There is no raid squad opened! Please wait until commander makes one. I will then use @Raiders mention in #raids channel to notify all raiders :wink:',
+  permissionsDenied: 'Only raid commander or council member can do this!'
+};
+
 // ====================================================
 //   Create embed message
 // ====================================================
@@ -280,7 +286,6 @@ export function raidCreate(client, evt, keywords) {
       bosses: bosses
     }, function(err, result) {
       assert.equal(err, null);
-      console.log('Success - new raid in database!');
       callback();
     });
   };
@@ -296,9 +301,12 @@ export function raidCreate(client, evt, keywords) {
           // post message to discord
           postRaidToDiscord(client, evt);
 
-          const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
-          let raiders = guild.roles.find(r => r.name === 'Raiders'); // get raiders role
-          evt.message.channel.sendMessage(raiders.mention + ' you can sign up for raid!');
+          // notify raiders if raid was created in public channel only
+          if (!evt.message.isPrivate) {
+            const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+            let raiders = guild.roles.find(r => r.name === 'Raiders'); // get raiders role
+            evt.message.channel.sendMessage(raiders.mention + ', the squad is open! You can sign up for raid.');
+          }
           return Promise.resolve();
         });
       }
@@ -311,9 +319,6 @@ export function raidCreate(client, evt, keywords) {
 // ====================================================
 
 export function raidDelete(client, evt) {
-  // send "typing"
-  evt.message.channel.sendTyping();
-
   // function that checks permissions to delete raid (commander or council)
   let canDeleteRaid = function() {
     // check commander
@@ -345,14 +350,15 @@ export function raidDelete(client, evt) {
         if (canDeleteRaid()) {
           deleteRaid(db, function() {
             db.close();
-            evt.message.channel.sendMessage('Raid was successfully removed!');
+            evt.message.channel.sendMessage('Raid squad is now closed!');
             return Promise.resolve();
           });
         } else {
-          evt.message.channel.sendMessage('Only raid commander or council member can delete existing raid!');
+          evt.message.channel.sendMessage(validations.permissionsDenied);
         }
       } else {
-        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
+        client.Users.get(evt.message.author.id).openDM().then(dm => dm.sendMessage(validations.noRaid));
+        evt.message.delete();
         return Promise.resolve();
       }
     });
@@ -419,22 +425,27 @@ export function raidJoin(client, evt, keywords) {
         let raiderInBackup = raid.backup.find(backupRaider => backupRaider.id === member.id);
 
         if (raiderInSquad || raiderInBackup) {
-          evt.message.channel.sendMessage(evt.message.author.mention + ' You are already in squad... :expressionless:');
+          client.Users.get(member.id).openDM().then(dm => dm.sendMessage('You are already in squad... :expressionless:'));
+          evt.message.delete();
         } else {
           addRaiderToSquad(db, function(msg) {
             db.close();
             postRaidToDiscord(client, evt);
             if (msg !== '') {
-              // evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
               client.Users.get(member.id).openDM().then(dm => dm.sendMessage(msg));
             }
             evt.message.addReaction('\uD83D\uDC4C'); // add :ok_hand: reaction as comfirmation
+            // delete message after 3 seconds
+            setTimeout(function() {
+              evt.message.delete();
+            }, 3000);
             return Promise.resolve();
           });
         }
       } else {
         db.close();
-        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
+        client.Users.get(member.id).openDM().then(dm => dm.sendMessage(validations.noRaid));
+        evt.message.delete();
       }
     });
   });
@@ -445,8 +456,6 @@ export function raidJoin(client, evt, keywords) {
 // ====================================================
 
 export function raidLeave(client, evt) {
-  // send "typing"
-  evt.message.channel.sendTyping();
   let msg;
 
   let removeRaiderFromSquad = function(db, callback) {
@@ -466,7 +475,6 @@ export function raidLeave(client, evt) {
           },
         {multi: true}, function(err, result) {
           assert.equal(err, null);
-          console.log('Raider removed from the squad');
           callback(msg);
         });
       } else {
@@ -481,7 +489,6 @@ export function raidLeave(client, evt) {
           },
         {multi: true}, function(err, result) {
           assert.equal(err, null);
-          console.log('Raider removed from the squad');
           callback(msg);
         });
       }
@@ -537,12 +544,20 @@ export function raidLeave(client, evt) {
         removeRaiderFromSquad(db, function(msg) {
           db.close();
           postRaidToDiscord(client, evt);
-          evt.message.channel.sendMessage(evt.message.author.mention + ' ' + msg);
+          evt.message.addReaction('\uD83D\uDC4C'); // add :ok_hand: reaction as comfirmation
+          // delete message after 3 seconds
+          setTimeout(function() {
+            evt.message.delete();
+          }, 3000);
+          client.Users.get(evt.message.author.id).openDM().then(dm => dm.sendMessage(msg));
           return Promise.resolve();
         });
       } else {
         db.close();
-        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
+        setTimeout(function() {
+          evt.message.delete();
+        }, 3000);
+        client.Users.get(evt.message.author.id).openDM().then(dm => dm.sendMessage(validations.noRaid));
       }
     });
   });
@@ -553,9 +568,6 @@ export function raidLeave(client, evt) {
 // ====================================================
 
 export function raidShow(client, evt) {
-  // send "typing"
-  evt.message.channel.sendTyping();
-
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
 
@@ -565,20 +577,21 @@ export function raidShow(client, evt) {
           db.close();
           // make new post
           postRaidToDiscord(client, evt);
-          return Promise.resolve();
         } else {
           // remove previous post
           removeRaidPost(client, db, function() {
             db.close();
             // make new post
             postRaidToDiscord(client, evt);
-            return Promise.resolve();
+            // delete !raid show message
+            evt.message.delete();
           });
         }
       } else {
-        evt.message.channel.sendMessage('Raid squad is not opened yet! Please wait');
-        return Promise.resolve();
+        client.Users.get(evt.message.author.id).openDM().then(dm => dm.sendMessage(validations.noRaid));
+        evt.message.delete();
       }
+      return Promise.resolve();
     });
   });
 }
