@@ -25,7 +25,16 @@ export default {
     overseer: 11,
     samarog: 12,
     sama: 12,
-    deimos: 13
+    deimos: 13,
+    soulless: 14,
+    horror: 14,
+    river: 15,
+    souls: 15,
+    statues: 16,
+    grenth: 16,
+    voice: 17,
+    void: 17,
+    dhuum: 17
   },
   bosses: {
     1: {
@@ -38,19 +47,19 @@ export default {
     },
     3: {
       name: 'Sabetha the Saboteur',
-      guide: ''
+      guide: 'https://www.youtube.com/watch?v=yFo5QPoZ1aM'
     },
     4: {
       name: 'Slothasor',
-      guide: ''
+      guide: 'https://www.youtube.com/watch?v=hKBJdICQZvQ'
     },
     5: {
       name: 'Bandit Trio',
-      guide: ''
+      guide: 'https://www.youtube.com/watch?v=wEMMRwoM56Q'
     },
     6: {
       name: 'Matthias Gabrel',
-      guide: ''
+      guide: 'https://www.youtube.com/watch?v=diXEYJNW4KQ'
     },
     7: {
       name: 'Escort the Glenna',
@@ -58,11 +67,11 @@ export default {
     },
     8: {
       name: 'Keep Construct',
-      guide: ''
+      guide: 'http://dulfy.net/2016/06/15/gw2-keep-construct-raid-boss-guide/'
     },
     9: {
       name: 'Xera',
-      guide: ''
+      guide: 'http://dulfy.net/2016/06/15/gw2-xera-raid-boss-guide/'
     },
     10: {
       name: 'Cairn the Indomitable',
@@ -74,10 +83,26 @@ export default {
     },
     12: {
       name: 'Samarog',
-      guide: ''
+      guide: 'https://www.youtube.com/watch?v=diwPG9Dsrt8'
     },
     13: {
       name: 'Deimos',
+      guide: 'https://www.youtube.com/watch?v=04KJ9Mtocmw'
+    },
+    14: {
+      name: 'Soulless Horror',
+      guide: 'http://dulfy.net/2017/12/02/gw2-soulless-horror-raid-guide/'
+    },
+    15: {
+      name: 'River of Souls',
+      guide: ''
+    },
+    16: {
+      name: 'Statues of Grenth',
+      guide: ''
+    },
+    17: {
+      name: 'Voice in the Void (Dhuum)',
       guide: ''
     }
   }
