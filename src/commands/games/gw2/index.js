@@ -41,7 +41,7 @@ export default {
     const command = keywords[0];
     keywords.shift(); // remove first array item, because it's command, not keyword
 
-    if (command === 'boss') return raidBossStatus(evt);
+    if (command === 'boss'|| command === 'bosses') return raidBossStatus(evt);
     if (command === 'create') return raidCreate(client, evt, keywords);
     if (command === 'join') return raidJoin(client, evt, keywords);
     if (command === 'backup') {
@@ -49,7 +49,7 @@ export default {
       return raidJoin(client, evt, keywords);
     }
     if (command === 'leave') return raidLeave(client, evt);
-    if (command === 'delete') return raidDelete(client, evt);
+    if (command === 'delete' || command === 'close' || command === 'gg') return raidDelete(client, evt);
     if (command === 'show' || command === 'list') return raidShow(client, evt);
 
     return helpText(client, evt, 'gw2', lang);
