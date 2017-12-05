@@ -95,15 +95,15 @@ export default {
     },
     15: {
       name: 'River of Souls',
-      guide: ''
+      guide: 'http://dulfy.net/2017/12/05/gw2-hall-of-chains-encounters-guide/'
     },
     16: {
       name: 'Statues of Grenth',
-      guide: ''
+      guide: 'http://dulfy.net/2017/12/05/gw2-hall-of-chains-encounters-guide/'
     },
     17: {
       name: 'Voice in the Void (Dhuum)',
-      guide: ''
+      guide: 'http://dulfy.net/2017/12/05/gw2-dhuum-raid-boss-guide/'
     }
   }
 };
