@@ -60,6 +60,7 @@ export function raidBossStatus(evt) {
         let salvationPass = '';
         let stronghold = '';
         let bastion = '';
+        let hallOfChains = '';
 
         // spiritvale
         if (bossesKilled.includes('vale_guardian')) {
@@ -155,6 +156,31 @@ export function raidBossStatus(evt) {
           bastion += 'Deimos';
         }
 
+        // Hall of Chains
+        if (bossesKilled.includes('soulless_horror')) {
+          hallOfChains += '~~Soulless Horror~~\n';
+        } else {
+          hallOfChains += 'Soulless Horror\n';
+        }
+
+        if (bossesKilled.includes('river_of_souls')) {
+          hallOfChains += '~~River of Souls~~\n';
+        } else {
+          hallOfChains += 'River of Souls\n';
+        }
+
+        if (bossesKilled.includes('statues_of_grenth')) {
+          hallOfChains += '~~Statues of Grenth~~\n';
+        } else {
+          hallOfChains += 'Statues of Grenth\n';
+        }
+
+        if (bossesKilled.includes('voice_in_the_void')) {
+          hallOfChains += '~~Voice in the Void (Dhuum)~~';
+        } else {
+          hallOfChains += 'Voice in the Void (Dhuum)';
+        }
+
 
 
         // Create embed object with message
@@ -177,19 +203,28 @@ export function raidBossStatus(evt) {
           fields: [
             {
               name: 'Spirit Vale',
-              value: spiritVale
+              value: spiritVale,
+              inline: true
             },
             {
               name: 'Salvation Pass',
-              value: salvationPass
+              value: salvationPass,
+              inline: true
             },
             {
               name: 'Stronghold of the Faithful',
-              value: stronghold
+              value: stronghold,
+              inline: true
             },
             {
               name: 'Bastion of the Penitent',
-              value: bastion
+              value: bastion,
+              inline: true
+            },
+            {
+              name: 'Hall of Chains',
+              value: hallOfChains,
+              inline: true
             }
           ]
         };
