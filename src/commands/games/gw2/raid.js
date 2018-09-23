@@ -184,15 +184,15 @@ export function raidBossStatus(evt) {
 
         // Mythwright Gambit
         if (bossesKilled.includes('conjured_amalgamate')) {
-          mythwrightGambit += '~~Conjured Amalgamate~~';
+          mythwrightGambit += '~~Conjured Amalgamate~~\n';
         } else {
-          mythwrightGambit += 'Conjured Amalgamate';
+          mythwrightGambit += 'Conjured Amalgamate\n';
         }
 
         if (bossesKilled.includes('twin_largos')) {
-          mythwrightGambit += '~~Twin Largos~~';
+          mythwrightGambit += '~~Twin Largos~~\n';
         } else {
-          mythwrightGambit += 'Twin Largos';
+          mythwrightGambit += 'Twin Largos\n';
         }
 
         if (bossesKilled.includes('qadim')) {
