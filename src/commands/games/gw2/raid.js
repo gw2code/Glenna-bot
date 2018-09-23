@@ -61,6 +61,7 @@ export function raidBossStatus(evt) {
         let stronghold = '';
         let bastion = '';
         let hallOfChains = '';
+        let mythwrightGambit = '';
 
         // spiritvale
         if (bossesKilled.includes('vale_guardian')) {
@@ -181,6 +182,25 @@ export function raidBossStatus(evt) {
           hallOfChains += 'Voice in the Void (Dhuum)';
         }
 
+        // Mythwright Gambit
+        if (bossesKilled.includes('conjured_amalgamate')) {
+          hallOfChains += '~~Conjured Amalgamate~~';
+        } else {
+          hallOfChains += 'Conjured Amalgamate';
+        }
+
+        if (bossesKilled.includes('twin_largos')) {
+          hallOfChains += '~~Twin Largos~~';
+        } else {
+          hallOfChains += 'Twin Largos';
+        }
+
+        if (bossesKilled.includes('qadim')) {
+          hallOfChains += '~~Qadim~~';
+        } else {
+          hallOfChains += 'Qadim';
+        }
+
 
 
         // Create embed object with message
@@ -224,6 +244,11 @@ export function raidBossStatus(evt) {
             {
               name: 'Hall of Chains',
               value: hallOfChains,
+              inline: true
+            },
+            {
+              name: 'Mythwright Gambit',
+              value: mythwrightGambit,
               inline: true
             }
           ]

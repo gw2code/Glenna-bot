@@ -34,7 +34,18 @@ export default {
     grenth: 16,
     voice: 17,
     void: 17,
-    dhuum: 17
+    dhuum: 17,
+    conjured: 18,
+    amalgamate: 18,
+    w6b1: 18,
+    twin: 19,
+    largos: 19,
+    w6b2: 19,
+    quadim: 20,
+    qadim: 20,
+    djinn: 20,
+    djin: 20,
+    w6b3: 20
   },
   bosses: {
     1: {
@@ -104,6 +115,18 @@ export default {
     17: {
       name: 'Voice in the Void (Dhuum)',
       guide: 'http://dulfy.net/2017/12/05/gw2-dhuum-raid-boss-guide/'
+    },
+    18: {
+      name: 'Conjured Amalgamate',
+      guide: ''
+    },
+    19: {
+      name: 'Twin Largos',
+      guide: ''
+    },
+    20: {
+      name: 'Qadim',
+      guide: ''
     }
   }
 };
