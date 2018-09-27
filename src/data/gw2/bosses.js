@@ -38,9 +38,12 @@ export default {
     conjured: 18,
     amalgamate: 18,
     w6b1: 18,
+    ca: 18,
     twin: 19,
     largos: 19,
     w6b2: 19,
+    nikare: 19,
+    kenut: 19,
     quadim: 20,
     qadim: 20,
     djinn: 20,
@@ -118,15 +121,15 @@ export default {
     },
     18: {
       name: 'Conjured Amalgamate',
-      guide: ''
+      guide: 'http://dulfy.net/2018/09/24/gw2-conjured-amalgamate-raid-guide/'
     },
     19: {
       name: 'Twin Largos',
-      guide: ''
+      guide: 'http://dulfy.net/2018/09/25/gw2-nikare-and-kenut-raid-guide/'
     },
     20: {
       name: 'Qadim',
-      guide: ''
+      guide: 'http://dulfy.net/2018/09/26/gw2-qadim-raid-boss-guide/'
     }
   }
 };
