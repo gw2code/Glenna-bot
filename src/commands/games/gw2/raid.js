@@ -212,9 +212,6 @@ export function raidBossStatus(evt) {
             icon_url: 'https://blogs-images.forbes.com/carolpinchefsky/files/2012/09/GuildWars2.jpg',
             text: 'Generated using GW2 API'
           },
-          thumbnail: {
-            url: 'https://wiki.guildwars2.com/images/5/5e/Legendary_Insight.png'
-          },
           author: {
             name: 'Weekly boss kill status',
             url: 'https://discordapp.com',

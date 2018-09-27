@@ -26,7 +26,7 @@ let createEmbed = function() {
     color: raid.color,
     author: {
       name: raid.commander.name,
-      icon_url: 'https://wiki.guildwars2.com/images/5/5a/Commander_tango_icon_200px.png'
+      icon_url: 'https://wiki.guildwars2.com/images/5/54/Commander_tag_%28blue%29.png'
     },
     fields: []
   };
