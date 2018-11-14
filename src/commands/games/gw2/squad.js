@@ -560,7 +560,7 @@ export function raidLeave(client, evt) {
 
       if (!raiderInSquad.queue && promotedRaider) {
         promoteRaider(db, promotedRaider, function() {
-          removeRaider();
+          removeRaider('squad');
         });
       } else {
         // just remove raider from queue squad
