@@ -60,6 +60,8 @@ export function raidBossStatus(evt) {
         let salvationPass = '';
         let stronghold = '';
         let bastion = '';
+        let hallOfChains = '';
+        let mythwrightGambit = '';
 
         // spiritvale
         if (bossesKilled.includes('vale_guardian')) {
@@ -155,6 +157,50 @@ export function raidBossStatus(evt) {
           bastion += 'Deimos';
         }
 
+        // Hall of Chains
+        if (bossesKilled.includes('soulless_horror')) {
+          hallOfChains += '~~Soulless Horror~~\n';
+        } else {
+          hallOfChains += 'Soulless Horror\n';
+        }
+
+        if (bossesKilled.includes('river_of_souls')) {
+          hallOfChains += '~~River of Souls~~\n';
+        } else {
+          hallOfChains += 'River of Souls\n';
+        }
+
+        if (bossesKilled.includes('statues_of_grenth')) {
+          hallOfChains += '~~Statues of Grenth~~\n';
+        } else {
+          hallOfChains += 'Statues of Grenth\n';
+        }
+
+        if (bossesKilled.includes('voice_in_the_void')) {
+          hallOfChains += '~~Voice in the Void (Dhuum)~~';
+        } else {
+          hallOfChains += 'Voice in the Void (Dhuum)';
+        }
+
+        // Mythwright Gambit
+        if (bossesKilled.includes('conjured_amalgamate')) {
+          mythwrightGambit += '~~Conjured Amalgamate~~\n';
+        } else {
+          mythwrightGambit += 'Conjured Amalgamate\n';
+        }
+
+        if (bossesKilled.includes('twin_largos')) {
+          mythwrightGambit += '~~Twin Largos~~\n';
+        } else {
+          mythwrightGambit += 'Twin Largos\n';
+        }
+
+        if (bossesKilled.includes('qadim')) {
+          mythwrightGambit += '~~Qadim~~';
+        } else {
+          mythwrightGambit += 'Qadim';
+        }
+
 
 
         // Create embed object with message
@@ -166,9 +212,6 @@ export function raidBossStatus(evt) {
             icon_url: 'https://blogs-images.forbes.com/carolpinchefsky/files/2012/09/GuildWars2.jpg',
             text: 'Generated using GW2 API'
           },
-          thumbnail: {
-            url: 'https://wiki.guildwars2.com/images/5/5e/Legendary_Insight.png'
-          },
           author: {
             name: 'Weekly boss kill status',
             url: 'https://discordapp.com',
@@ -177,19 +220,33 @@ export function raidBossStatus(evt) {
           fields: [
             {
               name: 'Spirit Vale',
-              value: spiritVale
+              value: spiritVale,
+              inline: true
             },
             {
               name: 'Salvation Pass',
-              value: salvationPass
+              value: salvationPass,
+              inline: true
             },
             {
               name: 'Stronghold of the Faithful',
-              value: stronghold
+              value: stronghold,
+              inline: true
             },
             {
               name: 'Bastion of the Penitent',
-              value: bastion
+              value: bastion,
+              inline: true
+            },
+            {
+              name: 'Hall of Chains',
+              value: hallOfChains,
+              inline: true
+            },
+            {
+              name: 'Mythwright Gambit',
+              value: mythwrightGambit,
+              inline: true
             }
           ]
         };

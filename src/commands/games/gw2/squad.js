@@ -5,7 +5,6 @@ import { gw2_bosses } from '../../../data';
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 const mongoUri = nconf.get('MONGODB_URI');
-const guildId = nconf.get('GUILD_ID');
 
 let raid = {};
 
@@ -27,7 +26,7 @@ let createEmbed = function() {
     color: raid.color,
     author: {
       name: raid.commander.name,
-      icon_url: 'https://wiki.guildwars2.com/images/5/5a/Commander_tango_icon_200px.png'
+      icon_url: 'https://wiki.guildwars2.com/images/5/54/Commander_tag_%28blue%29.png'
     },
     fields: []
   };
@@ -133,8 +132,11 @@ let createEmbed = function() {
 //   Get raid from database
 // ====================================================
 
-let getRaid = function(db, callback) {
-  let raidInDatabase = db.collection('raids').findOne();
+let getRaid = function(db, evt, callback) {
+  let guild = evt.message.guild;
+  let raidInDatabase = db.collection('raids').findOne(
+    {'guildId' : guild.id}
+  );
 
   raidInDatabase.then(function(result, err) {
     if (result) {
@@ -150,12 +152,13 @@ let getRaid = function(db, callback) {
 //   Delete raid post from discord channel
 // ====================================================
 
-let removeRaidPost = function(client, db, callback) {
+let removeRaidPost = function(client, evt, db, callback) {
   let discordPost = raid.discordPost;
+  let guild = evt.message.guild;
 
   let removeRaidPostFromDtb = function() {
     db.collection('raids').updateOne(
-      {}, // empty filter means update first (and only) raid
+      {'guildId' : guild.id},
       {
         $set: {
           discordPost: null
@@ -187,6 +190,7 @@ let removeRaidPost = function(client, db, callback) {
 // ====================================================
 
 let postRaidToDiscord = function(client, evt, callback) {
+  let guild = evt.message.guild;
   // send message
   let sendMessage = function(embed) {
     let discordPost = raid.discordPost;
@@ -207,7 +211,7 @@ let postRaidToDiscord = function(client, evt, callback) {
 
         let insertPostId = function(db, callback) {
           db.collection('raids').updateOne(
-            {}, // empty filter means update first (and only) raid
+            {'guildId' : guild.id},
             {
               $set: {
                 discordPost: {
@@ -236,7 +240,7 @@ let postRaidToDiscord = function(client, evt, callback) {
 
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
-    getRaid(db, function(raidActive) {
+    getRaid(db, evt, function(raidActive) {
       db.close();
       if (raidActive) {
         let embed = createEmbed();
@@ -253,7 +257,7 @@ let postRaidToDiscord = function(client, evt, callback) {
 // ====================================================
 
 export function raidCreate(client, evt, keywords) {
-  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+  let guild = evt.message.guild;
   let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
   let bosses = [];
@@ -272,6 +276,7 @@ export function raidCreate(client, evt, keywords) {
 
   let insertRaid = function(db, callback) {
     db.collection('raids').insertOne({
+      guildId: guild.id,
       commander: {
         id: member.id,
         name: member.nick || member.username
@@ -298,7 +303,7 @@ export function raidCreate(client, evt, keywords) {
 
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
-    getRaid(db, function(raidExists) {
+    getRaid(db, evt, function(raidExists) {
       if (raidExists) {
         evt.message.channel.sendMessage('There is already active raid! You can have only 1 raid at the time. Please delete previous one with `!raid delete` if you want to make new one (only raid commander or council member can do this).');
       } else {
@@ -309,10 +314,12 @@ export function raidCreate(client, evt, keywords) {
 
           // notify raiders if raid was created in public channel only
           if (!evt.message.isPrivate) {
-            const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+            let guild = evt.message.guild;
             let raiders = guild.roles.find(r => r.name === 'Raiders'); // get raiders role
-            evt.message.channel.sendMessage(raiders.mention + ', the squad is open! You can sign up for raid.');
-          }
+            if(raiders){
+              evt.message.channel.sendMessage(raiders.mention + ', the squad is open! You can sign up for raid.');
+            }
+            }
           return Promise.resolve();
         });
       }
@@ -325,13 +332,15 @@ export function raidCreate(client, evt, keywords) {
 // ====================================================
 
 export function raidDelete(client, evt) {
+  let guild = evt.message.guild;
+
   // function that checks permissions to delete raid (commander or council)
   let canDeleteRaid = function() {
     // check commander
     let isCommander = raid.commander.id === evt.message.author.id;
 
     // check council
-    const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+
     let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
     let isCouncil = member.roles.find(r => r.name === 'Lunar Ascended');
 
@@ -340,7 +349,7 @@ export function raidDelete(client, evt) {
 
   let updateOldPost = function(db, callback) {
     db.collection('raids').updateOne(
-    {}, // empty filter means update first (and only) raid
+    {'guildId' : guild.id}, // empty filter means update first (and only) raid
       {
         $set: {
           title: 'Raid squad - CLOSED',
@@ -359,7 +368,8 @@ export function raidDelete(client, evt) {
 
   let deleteRaid = function(db, callback) {
     updateOldPost(db, function() {
-      db.collection('raids').deleteMany({},
+      db.collection('raids').deleteOne(
+      {'guildId' : guild.id},
       function(err, result) {
         assert.equal(err, null);
         callback();
@@ -369,7 +379,7 @@ export function raidDelete(client, evt) {
 
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
-    getRaid(db, function(raidExists) {
+    getRaid(db, evt, function(raidExists) {
       // check if raid exists
       if (raidExists) {
         // check permissions to delete raid
@@ -396,7 +406,7 @@ export function raidDelete(client, evt) {
 // ====================================================
 
 export function raidJoin(client, evt, keywords) {
-  const guild = client.Guilds.find(g => g.id === guildId); // use guild discord ID
+  let guild = evt.message.guild;
   let member = guild.members.find(m => m.id === evt.message.author.id); // get guild member
 
   let isBackup = keywords.includes('backup');
@@ -434,7 +444,7 @@ export function raidJoin(client, evt, keywords) {
     }
 
     db.collection('raids').updateOne(
-      {}, // empty filter means update first (and only) raid  $addToSet
+      {'guildId' : guild.id},
       request,
       {upsert: true}, function(err, result) {
         assert.equal(err, null);
@@ -445,7 +455,7 @@ export function raidJoin(client, evt, keywords) {
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
 
-    getRaid(db, function(raidExists) {
+    getRaid(db, evt, function(raidExists) {
       if (raidExists) {
         let raiderInSquad = raid.squad.find(squadRaider => squadRaider.id === member.id);
         let raiderInBackup = raid.backup.find(backupRaider => backupRaider.id === member.id);
@@ -483,6 +493,7 @@ export function raidJoin(client, evt, keywords) {
 
 export function raidLeave(client, evt) {
   let msg;
+  let guild = evt.message.guild;
 
   let removeRaiderFromSquad = function(db, callback) {
     // function to remove raider in dtb
@@ -491,7 +502,7 @@ export function raidLeave(client, evt) {
 
       if (group === 'squad') {
         db.collection('raids').updateOne(
-        {}, // empty filter means update first (and only) raid
+          {'guildId' : guild.id},
           {
             $pull: {
               squad: {
@@ -505,7 +516,7 @@ export function raidLeave(client, evt) {
         });
       } else {
         db.collection('raids').updateOne(
-        {}, // empty filter means update first (and only) raid
+          {'guildId' : guild.id},
           {
             $pull: {
               backup: {
@@ -524,6 +535,7 @@ export function raidLeave(client, evt) {
     let promoteRaider = function(db, raider, call) {
       db.collection('raids').updateOne(
         {
+          'guildId' : guild.id,
           'squad.id': raider.id
         },
         {
@@ -548,7 +560,7 @@ export function raidLeave(client, evt) {
 
       if (!raiderInSquad.queue && promotedRaider) {
         promoteRaider(db, promotedRaider, function() {
-          removeRaider();
+          removeRaider('squad');
         });
       } else {
         // just remove raider from queue squad
@@ -565,7 +577,7 @@ export function raidLeave(client, evt) {
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
 
-    getRaid(db, function(raidExists) {
+    getRaid(db, evt, function(raidExists) {
       if (raidExists) {
         removeRaiderFromSquad(db, function(msg) {
           db.close();
@@ -594,10 +606,14 @@ export function raidLeave(client, evt) {
 // ====================================================
 
 export function raidShow(client, evt) {
+
   MongoClient.connect(mongoUri, function(err, db) {
     assert.equal(null, err);
 
-    getRaid(db, function(raidExists) {
+    console.log("Evt is:");
+    console.log(evt);
+
+    getRaid(db, evt, function(raidExists) {
       if (raidExists) {
         if (evt.message.isPrivate) {
           db.close();
@@ -605,7 +621,7 @@ export function raidShow(client, evt) {
           postRaidToDiscord(client, evt);
         } else {
           // remove previous post
-          removeRaidPost(client, db, function() {
+          removeRaidPost(client, evt, db, function() {
             db.close();
             // make new post
             postRaidToDiscord(client, evt);
