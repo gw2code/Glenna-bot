@@ -134,8 +134,8 @@ function onMessage(evt) {
 }
 
 function connect() {
-  if (!nconf.get('TOKEN') || !nconf.get('CLIENT_ID')) {
-    logger.error('Please setup TOKEN and CLIENT_ID in config.js to use Gravebot');
+  if (!nconf.get('TOKEN')) {
+    logger.error('Please setup TOKEN in config.js to use Gravebot');
     process.exit(1);
   }
 
@@ -201,9 +201,9 @@ export function start() {
   });
 
   client.Dispatcher.on('DISCONNECTED', err => {
-    logger.warn('Disconnected. Attempting to reconnect in 10 seconds...');
+    logger.warn({message: 'Disconnected. Attempting to reconnect in 20 seconds...', err});
     sentry(err, 'discord');
-    setTimeout(connect, 10000);
+    setTimeout(connect, 20000);
   });
 
   startPortalIntervals(client);
